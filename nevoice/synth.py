@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""谐波-噪声声码器（DDSP 思路，NumPy / CPU）+ 日语音节声学目标。"""
+"""谐波-噪声声码器（DDSP 思路，numpy / CPU）+ 日语音节声学目标。"""
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from .phonetics import VOWELS, CONS
@@ -118,7 +118,7 @@ def mora_acoustics(mora, profile, dur=0.44, semitones=0, glide=0.28):
                 c_end=c_end, g_end=g_end)
 
 
-# ---------------- 谐波-噪声渲染 ----------------
+# ---------------- numpy 谐波-噪声渲染 ----------------
 class HarmonicNoiseVocoder:
     def __init__(self, sr, n_harm=100, device="cpu"):
         self.sr = sr
