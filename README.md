@@ -16,3 +16,10 @@ python build.py 参考音频.wav 歌手名
 - 分析端：harvest/dio 双算法鲁棒 F0 + cheaptrick 谱包络 + d4c 非周期成分，非人声也稳。
 - 合成端：谐波-噪声声码器（连续相位，DDSP 思路）+ 日语共振峰发音模型，消除原站 WORLD 的电子味，元音 a/i/u/e/o 共振峰经校验准确。
 - 后处理：去爆音（lookahead limiter）、RMS 响度归一化、无削波；oto 用正 cutoff 同时兼容 UTAU 与 OpenUtau。
+
+## 目录
+```
+server.py / build.py    网页服务与命令行入口
+nevoice/                引擎包（分析/合成/oto/语音学）
+web/                    网页前端
+```
