@@ -8,6 +8,7 @@ import numpy as np
 
 
 def _voice_end_ms(y, sr):
+    """基于能量找有效结束点(ms)。"""
     total = len(y) / sr * 1000.0
     win = int(0.01 * sr)
     if win < 2:
@@ -23,13 +24,14 @@ def _voice_end_ms(y, sr):
 
 
 def _geometry(y, sr, ac):
+    """返回 offset, consonant, cutoff, preutter, overlap（整数 ms）。"""
     total = len(y) / sr * 1000.0
     c_end = ac["c_end"]
     fp = (ac["t"][1] - ac["t"][0]) * 1000.0
-    middle = c_end * fp
+    middle = c_end * fp                       # 辅音->元音过渡位置
     voice_end = _voice_end_ms(y, sr)
 
-    if c_end == 0:
+    if c_end == 0:                            # 纯元音：参照原站给小值
         offset = 0
         overlap = 8
         preutter = 15
@@ -40,8 +42,9 @@ def _geometry(y, sr, ac):
         preutter = middle
         consonant = middle + 20.0
 
-    cutoff = max(8.0, total - voice_end)
+    cutoff = max(8.0, total - voice_end)      # 尾部留白长度
     right = total - cutoff
+    # 几何校验：offset < overlap < preutter < consonant < right
     if consonant >= right:
         consonant = right - 10.0
     if preutter >= consonant:

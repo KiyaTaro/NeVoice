@@ -27,6 +27,7 @@ def build_voicebank(source, out_dir, singer="nevoice", dur=0.44,
     os.makedirs(out_dir, exist_ok=True)
     profile = A.analyze(source, target_sr=target_sr)
 
+    # 第一遍：合成原始音，收集 RMS
     rendered = []
     for idx, romaji in enumerate(ORDER):
         mora = MORA[romaji]
@@ -38,6 +39,7 @@ def build_voicebank(source, out_dir, singer="nevoice", dur=0.44,
 
     tgt = _target_rms([r[2] for r in rendered])
 
+    # 第二遍：后处理 + 写 wav
     oto_lines = []
     for romaji, mora, y, ac in rendered:
         y = P.master(y, target_sr, target_rms=tgt, depop=depop)
@@ -51,10 +53,12 @@ def build_voicebank(source, out_dir, singer="nevoice", dur=0.44,
     if include_oto:
         O.write_oto(oto_lines, os.path.join(out_dir, "oto.ini"))
 
+    # character.txt
     with open(os.path.join(out_dir, "character.txt"), "w",
               encoding="shift_jis", errors="replace") as f:
         f.write(f"{singer}\nnevoice AI engine\n")
 
+    # 打包 zip
     zip_path = out_dir + ".zip"
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
         for root, _, files in os.walk(out_dir):
