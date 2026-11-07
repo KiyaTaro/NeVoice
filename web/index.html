@@ -151,7 +151,7 @@ const GO=[["a","ka","sa","ta","na","ha","ma","ya","ra","wa","n"],
  ["o","ko","so","to","no","ho","mo","yo","ro","wo",""]];
 const DAKU=[["ga","gi","gu","ge","go","za","ji","zu","ze","zo"],
  ["da","de","do","ba","bi","bu","be","bo","pa","pi"],
- ["pu","pe","po","","","","","","",""]];
+ ["pu","pe","po","","","","","","","",""]];
 const YOU=[["kya","kyu","kyo","sha","shu","sho","cha","chu","cho","nya","nyu"],
  ["nyo","hya","hyu","hyo","mya","myu","myo","rya","ryu","ryo","gya"],
  ["gyu","gyo","ja","ju","jo","bya","byu","byo","pya","pyu","pyo"]];
@@ -169,7 +169,7 @@ const KANA={a:"あ",i:"い",u:"う",e:"え",o:"お",ka:"か",ki:"き",ku:"く",k
 function build(root,data){
   root.innerHTML="";
   data.flat().forEach(r=>{
-    const d=document.createElement("div");
+    const d=document.createElement(r?"div":"div");
     if(!r){d.className="cell ghost";root.appendChild(d);return}
     d.className="cell";d.innerHTML=`<span class="kana">${KANA[r]||r}</span><span class="roma">${r}</span>`;
     d.onclick=()=>play(`/api/mora/${r}.wav`);
