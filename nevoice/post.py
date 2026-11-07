@@ -9,9 +9,11 @@ def remove_dc(y):
 
 
 def lookahead_limiter(y, sr, ceiling_db=-1.0, lookahead_ms=2.0, release_ms=80.0):
+    """lookahead 峰值限制器，软压瞬态尖峰（去爆音）。"""
     ceiling = 10 ** (ceiling_db / 20.0)
     la = max(1, int(lookahead_ms / 1000 * sr))
     rel = max(1, int(release_ms / 1000 * sr))
+    # 前瞻峰值包络
     peak = np.maximum(1e-9, np.abs(y))
     env = np.empty_like(peak)
     cur = 0.0
@@ -20,19 +22,21 @@ def lookahead_limiter(y, sr, ceiling_db=-1.0, lookahead_ms=2.0, release_ms=80.0)
         cur = max(ahead, cur - cur / rel)
         env[i] = cur
     gain = np.minimum(1.0, ceiling / env)
+    # 增益平滑（attack 快）
     gain = lfilter([1.0 / la] * la, [1.0], gain)
     gain = np.clip(gain, 0, 1)
     return y * gain
 
 
 def rms_normalize(y, target_rms, sr, ceiling_db=-1.0):
+    """按目标 RMS 提增益，再用 limiter 防削顶。"""
     active = np.abs(y) > max(np.max(np.abs(y)) * 0.05, 1e-4)
     if active.sum() < 4:
         return y
     cur_rms = np.sqrt(np.mean(y[active] ** 2)) + 1e-9
     g = target_rms / cur_rms
     y = y * g
-    return lookahead_limiter(y, sr, ceiling_db=ceiling)
+    return lookahead_limiter(y, sr, ceiling_db=ceiling_db)
 
 
 def master(y, sr, target_rms, depop=True):
@@ -40,6 +44,7 @@ def master(y, sr, target_rms, depop=True):
     if depop:
         y = lookahead_limiter(y, sr)
     y = rms_normalize(y, target_rms, sr)
+    # 最终保险
     m = np.max(np.abs(y)) + 1e-9
     if m > 0.99:
         y = y / m * 0.99
