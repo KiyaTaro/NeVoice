@@ -1,0 +1,7 @@
+numpy>=1.24
+scipy>=1.10
+soundfile>=0.12
+librosa>=0.10
+pyworld>=0.3
+pyloudnorm>=0.2
+setuptools<80
