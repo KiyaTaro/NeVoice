@@ -19,7 +19,8 @@ def main():
     t0 = time.time()
     res = build_voicebank(source, out, singer=singer, progress=prog)
     print("\n完成，耗时", round(time.time() - t0, 1), "秒")
-    print("样本包:", res["zip_path"], "| 假名", res["count"], "| F0", res["f0"], "Hz")
+    print("样本包:", res["zip_path"], "| 假名", res["count"],
+          "| F0", res["f0"], "Hz")
 
 
 if __name__ == "__main__":

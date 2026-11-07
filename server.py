@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""本地 AI 声库服务器（Python 标准库，零额外 web 框架）。"""
+"""本地 AI 声库服务器（Python 标准库，零额外 web 框架）。
+启动后浏览器打开 http://127.0.0.1:8765 即可使用。"""
 import io
 import os
 import re
@@ -16,11 +17,11 @@ from nevoice import analyze as A, synth as S, post as P, oto as O
 from nevoice.phonetics import MORA, ORDER
 
 SR = 44100
-MAX_UPLOAD = 24 * 1024 * 1024
+MAX_UPLOAD = 24 * 1024 * 1024     # 上传上限 24MB
 WEB = os.path.join(os.path.dirname(__file__), "web")
 STATE = {"lock": threading.Lock(), "ready": False, "moras": {},
          "zip": b"", "info": {}, "singer": "nevoice"}
-BAKE_LOCK = threading.Lock()
+BAKE_LOCK = threading.Lock()      # 公开后保证同一时刻只有一个重任务
 
 
 def wav_bytes(y, sr=SR):
@@ -31,6 +32,7 @@ def wav_bytes(y, sr=SR):
 
 
 def demo_source(sr=SR):
+    """内置演示参考：非人声锯齿波。"""
     dur, f0 = 1.2, 170.0
     t = np.arange(int(sr * dur)) / sr
     x = sum((1.0 / h) * np.sin(2 * np.pi * f0 * h * t) for h in range(1, 25))
@@ -90,7 +92,7 @@ def run_bake(form, tmp_path=None):
 
     zbuf = io.BytesIO()
     singer = STATE.get("singer", "nevoice")
-    with zipfile.ZipFile(zbuf, zipfile.ZIP_DEFLATED) as z:
+    with zipfile.ZipFile(zbuf, "w", zipfile.ZIP_DEFLATED) as z:
         if STATE.get("include_oto", True):
             z.writestr(f"{singer}/oto.ini",
                        "\n".join(oto_lines).encode("shift_jis", "replace"))
@@ -129,6 +131,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         u = urllib.parse.urlparse(self.path)
         path = u.path
+        q = urllib.parse.parse_qs(u.query)
         if path in ("/", "/index.html"):
             return self._serve("index.html", "text/html; charset=utf-8")
         if path.startswith("/api/mora/"):
@@ -174,6 +177,7 @@ class Handler(BaseHTTPRequestHandler):
             form = {k: v[0] for k, v in form.items()}
 
         if u.path in ("/api/bake", "/api/bake/"):
+            # 公开后：同一时刻只允许一个重任务，其余立即返回忙碌
             if not BAKE_LOCK.acquire(blocking=False):
                 return self._json(503, {"error": "服务器正忙，请稍后再试"})
             try:
@@ -201,10 +205,15 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
+    import webbrowser
     host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "8765"))
     srv = ThreadingHTTPServer((host, port), Handler)
-    print(f"NeVoice 已启动：http://{host}:{port}")
+    url = f"http://{host}:{port}"
+    print(f"NeVoice 已启动：{url}  (Ctrl+C 退出)")
+    if host in ("127.0.0.1", "localhost"):
+        threading.Timer(1.0, lambda: webbrowser.open(
+            f"http://127.0.0.1:{port}")).start()
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
